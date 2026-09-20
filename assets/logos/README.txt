@@ -1,0 +1,1 @@
+Put your real ESSA logo as essa-logo.png and college logo as college-logo.png.

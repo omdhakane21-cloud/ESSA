@@ -1,0 +1,1 @@
+Replace these expected image names with your real photos: essa-main.jpg, about-essa.jpg, essa-photo-1.jpg through essa-photo-4.jpg, president.jpg, mentor-1.jpg, mentor-2.jpg, event-placeholder.jpg
