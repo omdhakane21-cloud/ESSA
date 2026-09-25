@@ -1,4 +1,4 @@
-const API="http://127.0.0.1:8000";
+const API="https://essa-hwxl.onrender.com";
 document.getElementById("year").textContent=new Date().getFullYear();
 const menu=document.getElementById("mobileMenu");
 if(menu) menu.onclick=()=>document.querySelector(".navbar").classList.toggle("open");
