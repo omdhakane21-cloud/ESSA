@@ -13,10 +13,10 @@ class Registration(Base):
     year = Column(String(50))
     status = Column(String(30), default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
-    
-    from sqlalchemy import Column, Integer, String, DateTime
-from datetime import datetime
 
+
+from sqlalchemy import Column, Integer, String, DateTime
+from datetime import datetime
 from app.config.database import Base
 
 
