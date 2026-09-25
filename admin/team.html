@@ -1,1 +1,520 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Team Management</title><link rel="stylesheet" href="../css/style.css"></head><body><nav class="navbar"><div class="nav-container"><a href="dashboard.html">Dashboard</a><a href="events.html">Events</a><a href="team.html">Team</a><a href="gallery.html">Gallery</a><a href="registrations.html">Registrations</a><a href="messages.html">Messages</a></div></nav><section class="section"><div class="section-container"><div class="section-heading"><span>ESSA ADMIN</span><h2>Team Management</h2><div class="heading-line"></div></div><div id="content">Loading...</div></div></section><script>const t=localStorage.getItem("essa_token");if(!t)location.href="login.html";fetch("https://essa-hwxl.onrender.com/api/team/",{headers:{Authorization:"Bearer "+t}}).then(r=>r.json()).then(d=>content.innerHTML="<pre>"+JSON.stringify(d,null,2)+"</pre>").catch(()=>content.textContent="Start the backend first.");</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESSA - Team Management</title>
+
+  <link rel="stylesheet" href="../css/style.css">
+
+  <style>
+    .admin-box {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+
+    .admin-box h3 {
+      margin-top: 0;
+      color: #841d2d;
+    }
+
+    .team-form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 15px;
+    }
+
+    .team-form input,
+    .team-form textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    .team-form textarea {
+      min-height: 100px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    .btn {
+      background: #841d2d;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .btn:hover {
+      background: #681624;
+    }
+
+    .btn-delete {
+      background: #b00020;
+    }
+
+    .btn-edit {
+      background: #444;
+      margin-right: 8px;
+    }
+
+    .team-card {
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .team-card img {
+      width: 110px;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid #841d2d;
+    }
+
+    .team-info {
+      flex: 1;
+    }
+
+    @media(max-width:700px) {
+      .team-form {
+        grid-template-columns: 1fr;
+      }
+
+      .team-card {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <a href="dashboard.html">Dashboard</a>
+    <a href="events.html">Events</a>
+    <a href="team.html">Team</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="registrations.html">Registrations</a>
+    <a href="messages.html">Messages</a>
+  </div>
+</nav>
+
+<section class="section">
+  <div class="section-container">
+
+    <div class="section-heading">
+      <span>ESSA ADMIN</span>
+      <h2>Team Management</h2>
+      <div class="heading-line"></div>
+    </div>
+
+    <div class="admin-box">
+
+      <h3 id="formTitle">Add Team Member</h3>
+
+      <form id="teamForm">
+
+        <input type="hidden" id="memberId">
+
+        <input
+          id="name"
+          type="text"
+          placeholder="Name"
+          required
+        >
+
+        <input
+          id="role"
+          type="text"
+          placeholder="Role / Position"
+          required
+        >
+
+        <input
+          id="department"
+          type="text"
+          placeholder="Department"
+        >
+
+        <input
+          id="phone"
+          type="text"
+          placeholder="Phone"
+        >
+
+        <input
+          id="email"
+          type="email"
+          placeholder="Email"
+        >
+
+        <input
+          id="display_order"
+          type="number"
+          placeholder="Display Order"
+          value="0"
+        >
+
+        <textarea
+          id="bio"
+          class="full"
+          placeholder="Short bio"
+        ></textarea>
+
+        <div class="full">
+          <label><b>Photo</b></label>
+          <input
+            id="photo"
+            type="file"
+            accept="image/*"
+          >
+        </div>
+
+        <div class="full">
+          <button class="btn" type="submit">
+            Save Team Member
+          </button>
+
+          <button
+            class="btn"
+            type="button"
+            onclick="resetForm()"
+          >
+            Cancel
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+
+    <h3>Current Team Members</h3>
+
+    <div id="teamList">
+      Loading...
+    </div>
+
+  </div>
+</section>
+
+<script>
+
+const API = "https://essa-tpgb.onrender.com";
+
+const token = localStorage.getItem("essa_token");
+
+if (!token) {
+  window.location.href = "login.html";
+}
+
+const headers = {
+  "Authorization": "Bearer " + token,
+  "Content-Type": "application/json"
+};
+
+async function loadTeam() {
+
+  const list = document.getElementById("teamList");
+
+  try {
+
+    const response = await fetch(API + "/api/team/");
+
+    if (!response.ok) {
+      throw new Error("Could not load team");
+    }
+
+    const members = await response.json();
+
+    if (!members.length) {
+      list.innerHTML = "<p>No team members added yet.</p>";
+      return;
+    }
+
+    list.innerHTML = members.map(member => {
+
+      let photoUrl = "";
+
+      if (member.photo) {
+        photoUrl = member.photo.startsWith("http")
+          ? member.photo
+          : API + member.photo;
+      }
+
+      return `
+        <div class="team-card">
+
+          ${
+            photoUrl
+              ? `<img src="${photoUrl}" alt="${member.name}">`
+              : `<div style="
+                    width:110px;
+                    height:110px;
+                    border-radius:50%;
+                    background:#eee;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;">
+                    No Photo
+                 </div>`
+          }
+
+          <div class="team-info">
+
+            <h3>${member.name}</h3>
+
+            <p>
+              <strong>${member.role}</strong>
+            </p>
+
+            <p>${member.department || ""}</p>
+
+            <p>${member.bio || ""}</p>
+
+            <p>${member.phone || ""}</p>
+
+            <p>${member.email || ""}</p>
+
+            <button
+              class="btn btn-edit"
+              onclick='editMember(${JSON.stringify(member)})'>
+              Edit
+            </button>
+
+            <button
+              class="btn btn-delete"
+              onclick="deleteMember(${member.id})">
+              Delete
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+
+  } catch (error) {
+
+    console.error(error);
+
+    list.innerHTML =
+      "<p style='color:red'>Could not connect to the ESSA backend.</p>";
+  }
+}
+
+
+document
+  .getElementById("teamForm")
+  .addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const id = document.getElementById("memberId").value;
+
+    const data = {
+
+      name: document.getElementById("name").value,
+
+      role: document.getElementById("role").value,
+
+      department: document.getElementById("department").value,
+
+      bio: document.getElementById("bio").value,
+
+      phone: document.getElementById("phone").value,
+
+      email: document.getElementById("email").value,
+
+      display_order:
+        Number(document.getElementById("display_order").value) || 0,
+
+      active: 1
+    };
+
+    try {
+
+      let response;
+
+      if (id) {
+
+        response = await fetch(
+          API + "/api/team/" + id,
+          {
+            method: "PUT",
+            headers: headers,
+            body: JSON.stringify(data)
+          }
+        );
+
+      } else {
+
+        response = await fetch(
+          API + "/api/team/",
+          {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(data)
+          }
+        );
+
+      }
+
+      if (!response.ok) {
+
+        const error = await response.text();
+
+        alert("Error saving member:\n" + error);
+
+        return;
+      }
+
+      const member = await response.json();
+
+      const photo =
+        document.getElementById("photo").files[0];
+
+      if (photo) {
+
+        const formData = new FormData();
+
+        formData.append("file", photo);
+
+        const photoResponse = await fetch(
+          API + "/api/team/" + member.id + "/photo",
+          {
+            method: "POST",
+            headers: {
+              "Authorization": "Bearer " + token
+            },
+            body: formData
+          }
+        );
+
+        if (!photoResponse.ok) {
+          alert("Member saved, but photo upload failed.");
+        }
+      }
+
+      alert("Team member saved successfully!");
+
+      resetForm();
+
+      loadTeam();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert("Backend connection error.");
+
+    }
+
+  });
+
+
+function editMember(member) {
+
+  document.getElementById("memberId").value =
+    member.id;
+
+  document.getElementById("name").value =
+    member.name || "";
+
+  document.getElementById("role").value =
+    member.role || "";
+
+  document.getElementById("department").value =
+    member.department || "";
+
+  document.getElementById("bio").value =
+    member.bio || "";
+
+  document.getElementById("phone").value =
+    member.phone || "";
+
+  document.getElementById("email").value =
+    member.email || "";
+
+  document.getElementById("display_order").value =
+    member.display_order || 0;
+
+  document.getElementById("formTitle").innerText =
+    "Edit Team Member";
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
+}
+
+
+async function deleteMember(id) {
+
+  if (!confirm("Delete this team member?")) {
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      API + "/api/team/" + id,
+      {
+        method: "DELETE",
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      }
+    );
+
+    if (!response.ok) {
+
+      alert("Delete failed.");
+
+      return;
+    }
+
+    loadTeam();
+
+  } catch (error) {
+
+    alert("Backend connection error.");
+
+  }
+}
+
+
+function resetForm() {
+
+  document.getElementById("teamForm").reset();
+
+  document.getElementById("memberId").value = "";
+
+  document.getElementById("formTitle").innerText =
+    "Add Team Member";
+
+}
+
+
+loadTeam();
+
+</script>
+
+</body>
+</html>
