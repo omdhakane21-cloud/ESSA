@@ -1,1 +1,435 @@
 <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gallery Management</title><link rel="stylesheet" href="../css/style.css"></head><body><nav class="navbar"><div class="nav-container"><a href="dashboard.html">Dashboard</a><a href="events.html">Events</a><a href="team.html">Team</a><a href="gallery.html">Gallery</a><a href="registrations.html">Registrations</a><a href="messages.html">Messages</a></div></nav><section class="section"><div class="section-container"><div class="section-heading"><span>ESSA ADMIN</span><h2>Gallery Management</h2><div class="heading-line"></div></div><div id="content">Loading...</div></div></section><script>const t=localStorage.getItem("essa_token");if(!t)location.href="login.html";fetch("https://essa-hwxl.onrender.com/api/gallery/",{headers:{Authorization:"Bearer "+t}}).then(r=>r.json()).then(d=>content.innerHTML="<pre>"+JSON.stringify(d,null,2)+"</pre>").catch(()=>content.textContent="Start the backend first.");</script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>ESSA - Gallery Management</title>
+
+  <link rel="stylesheet" href="../css/style.css">
+
+  <style>
+
+    .admin-box {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 25px;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+
+    .admin-box h3 {
+      margin-top: 0;
+      color: #841d2d;
+    }
+
+    .gallery-form {
+      display: grid;
+      gap: 15px;
+    }
+
+    .gallery-form input,
+    .gallery-form textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    .gallery-form textarea {
+      min-height: 100px;
+    }
+
+    .btn {
+      background: #841d2d;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .btn:hover {
+      background: #681624;
+    }
+
+    .delete-btn {
+      background: #b00020;
+      margin-top: 10px;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+
+    .gallery-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+    }
+
+    .gallery-card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .gallery-info {
+      padding: 15px;
+    }
+
+    .gallery-info h3 {
+      margin-top: 0;
+    }
+
+  </style>
+
+</head>
+
+<body>
+
+<nav class="navbar">
+
+  <div class="nav-container">
+
+    <a href="dashboard.html">Dashboard</a>
+
+    <a href="events.html">Events</a>
+
+    <a href="team.html">Team</a>
+
+    <a href="gallery.html">Gallery</a>
+
+    <a href="registrations.html">Registrations</a>
+
+    <a href="messages.html">Messages</a>
+
+  </div>
+
+</nav>
+
+
+<section class="section">
+
+  <div class="section-container">
+
+    <div class="section-heading">
+
+      <span>ESSA ADMIN</span>
+
+      <h2>Gallery Management</h2>
+
+      <div class="heading-line"></div>
+
+    </div>
+
+
+    <div class="admin-box">
+
+      <h3>Upload New Photo</h3>
+
+      <form
+        id="galleryForm"
+        class="gallery-form"
+      >
+
+        <input
+          id="title"
+          type="text"
+          placeholder="Photo title"
+        >
+
+        <textarea
+          id="description"
+          placeholder="Photo description"
+        ></textarea>
+
+        <input
+          id="image"
+          type="file"
+          accept="image/*"
+          required
+        >
+
+        <button
+          class="btn"
+          type="submit"
+        >
+          Upload Photo
+        </button>
+
+      </form>
+
+    </div>
+
+
+    <h3>Current Gallery</h3>
+
+    <div
+      id="galleryList"
+      class="gallery-grid"
+    >
+      Loading...
+    </div>
+
+  </div>
+
+</section>
+
+
+<script>
+
+const API = "https://essa-tpgb.onrender.com";
+
+const token =
+  localStorage.getItem("essa_token");
+
+if (!token) {
+
+  window.location.href =
+    "login.html";
+
+}
+
+
+async function loadGallery() {
+
+  const list =
+    document.getElementById("galleryList");
+
+  try {
+
+    const response =
+      await fetch(API + "/api/gallery/");
+
+    if (!response.ok) {
+      throw new Error("Gallery loading failed");
+    }
+
+    const images =
+      await response.json();
+
+    if (!images.length) {
+
+      list.innerHTML =
+        "<p>No gallery photos yet.</p>";
+
+      return;
+    }
+
+
+    list.innerHTML =
+      images.map(item => {
+
+        const imageUrl =
+          item.image.startsWith("http")
+            ? item.image
+            : API + item.image;
+
+        return `
+
+          <div class="gallery-card">
+
+            <img
+              src="${imageUrl}"
+              alt="${item.title || "ESSA Photo"}"
+            >
+
+            <div class="gallery-info">
+
+              <h3>
+                ${item.title || "ESSA Photo"}
+              </h3>
+
+              <p>
+                ${item.description || ""}
+              </p>
+
+              <button
+                class="btn delete-btn"
+                onclick="deleteImage(${item.id})"
+              >
+                Delete Photo
+              </button>
+
+            </div>
+
+          </div>
+
+        `;
+
+      }).join("");
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    list.innerHTML =
+      "<p style='color:red'>Could not connect to the ESSA backend.</p>";
+
+  }
+
+}
+
+
+document
+  .getElementById("galleryForm")
+  .addEventListener("submit", async function(event) {
+
+    event.preventDefault();
+
+    const file =
+      document.getElementById("image").files[0];
+
+    if (!file) {
+
+      alert("Please select an image.");
+
+      return;
+    }
+
+
+    const formData =
+      new FormData();
+
+    formData.append(
+      "title",
+      document.getElementById("title").value
+    );
+
+    formData.append(
+      "description",
+      document.getElementById("description").value
+    );
+
+    formData.append(
+      "file",
+      file
+    );
+
+
+    try {
+
+      const response =
+        await fetch(
+          API + "/api/gallery/",
+          {
+            method: "POST",
+
+            headers: {
+              "Authorization":
+                "Bearer " + token
+            },
+
+            body: formData
+          }
+        );
+
+
+      if (!response.ok) {
+
+        const error =
+          await response.text();
+
+        alert(
+          "Upload failed:\n" + error
+        );
+
+        return;
+      }
+
+
+      alert(
+        "Photo uploaded successfully!"
+      );
+
+      document
+        .getElementById("galleryForm")
+        .reset();
+
+      loadGallery();
+
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Backend connection error."
+      );
+
+    }
+
+  });
+
+
+async function deleteImage(id) {
+
+  if (
+    !confirm(
+      "Delete this gallery photo?"
+    )
+  ) {
+    return;
+  }
+
+
+  try {
+
+    const response =
+      await fetch(
+        API + "/api/gallery/" + id,
+        {
+          method: "DELETE",
+
+          headers: {
+            "Authorization":
+              "Bearer " + token
+          }
+        }
+      );
+
+
+    if (!response.ok) {
+
+      alert("Delete failed.");
+
+      return;
+    }
+
+
+    loadGallery();
+
+
+  } catch (error) {
+
+    alert(
+      "Backend connection error."
+    );
+
+  }
+
+}
+
+
+loadGallery();
+
+</script>
+
+</body>
+
+</html>
